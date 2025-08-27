@@ -5,8 +5,7 @@ class WaylandLayerShell {
   final methodChannel = const MethodChannel('wayland_layer_shell');
 
   Future<String?> getPlatformVersion() async {
-    final version =
-        await methodChannel.invokeMethod<String>('getPlatformVersion');
+    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
 
@@ -27,12 +26,14 @@ class WaylandLayerShell {
   /// Returns: 'true' if platform is Wayland and Wayland compositor supports
   /// the zwlr_layer_shell_v1 protocol, if not supported, returns 'false' and initialize
   /// gtk window as normal window
-  Future<bool> initialize([int? width, int? height]) async {
-    final Map<String, dynamic> arguments = {
-      'width': width ?? 1280,
-      'height': height ?? 720,
+  Future<bool> initialize(int width, int height, {String? monitor}) async {
+    final args = <String, dynamic>{
+      'width': width,
+      'height': height,
+      if (monitor != null) 'monitor': monitor,
     };
-    return await methodChannel.invokeMethod('initialize', arguments);
+    final result = await methodChannel.invokeMethod('initialize', args);
+    return result ?? false;
   }
 
   /// @layer: The [ShellLayer] on which this surface appears.
@@ -51,14 +52,12 @@ class WaylandLayerShell {
 
   /// Returns: the current layer as [ShellLayer].
   Future<ShellLayer> getLayer() async {
-    return ShellLayer
-        .values[(await methodChannel.invokeMethod('getLayer')) as int];
+    return ShellLayer.values[(await methodChannel.invokeMethod('getLayer')) as int];
   }
 
   /// Returns: the list of all [Monitor]s connected to the computer.
   Future<List<Monitor>> getMonitorList() async {
-    List<String> monitors =
-        List<String>.from(await methodChannel.invokeMethod('getMonitorList'));
+    List<String> monitors = List<String>.from(await methodChannel.invokeMethod('getMonitorList'));
     return monitors.map((e) {
       final i = e.indexOf(':');
       return Monitor(int.parse(e.substring(0, i)), e.substring(i + 1));
@@ -76,6 +75,11 @@ class WaylandLayerShell {
     await methodChannel.invokeMethod('setMonitor', arguments);
   }
 
+  Future<bool> showWindow() async {
+    final result = await methodChannel.invokeMethod('showWindow');
+    return result ?? false;
+  }
+
   /// @edge: A [ShellEdge] this layer surface may be anchored to.
   /// @anchor_to_edge: Whether or not to anchor this layer surface to @edge.
   ///
@@ -85,10 +89,7 @@ class WaylandLayerShell {
   ///
   /// Default is %FALSE for each [ShellEdge]
   Future<void> setAnchor(ShellEdge edge, bool anchorToEdge) async {
-    final Map<String, dynamic> arguments = {
-      'edge': edge.index,
-      'anchor_to_edge': anchorToEdge
-    };
+    final Map<String, dynamic> arguments = {'edge': edge.index, 'anchor_to_edge': anchorToEdge};
     await methodChannel.invokeMethod('setAnchor', arguments);
   }
 
@@ -110,10 +111,7 @@ class WaylandLayerShell {
   ///
   /// Default is 0 for each [ShellEdge]
   Future<void> setMargin(ShellEdge edge, int marginSize) async {
-    final Map<String, dynamic> arguments = {
-      'edge': edge.index,
-      'margin_size': marginSize
-    };
+    final Map<String, dynamic> arguments = {'edge': edge.index, 'margin_size': marginSize};
     await methodChannel.invokeMethod('setMargin', arguments);
   }
 
@@ -174,7 +172,6 @@ class WaylandLayerShell {
 
   /// Returns: current keyboard interactivity mode for window
   Future<ShellKeyboardMode> getKeyboardMode() async {
-    return ShellKeyboardMode
-        .values[(await methodChannel.invokeMethod('getKeyboardMode')) as int];
+    return ShellKeyboardMode.values[(await methodChannel.invokeMethod('getKeyboardMode')) as int];
   }
 }
